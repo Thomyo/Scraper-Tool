@@ -16,9 +16,7 @@ class Windows(QMainWindow):
         QMainWindow.__init__(self)
         self.statusBar().setStyleSheet("color : red")
         self.title = QLabel("Data mining")
-        self.data_posts_old = None
         self.data_posts = None
-        self.data_users_old = None
         self.data_users = None
         self.data_analyse = None
 
@@ -27,9 +25,9 @@ class Windows(QMainWindow):
         self.LE_keyWord.setPlaceholderText("Enter keyword")
 
         # lang (twitter only)
-        self.CO_lang = QComboBox(self)
-        self.CO_lang.addItems(["en", "fr"])
-        self.CO_lang.hide()
+        self.CO_twitter_lang = QComboBox(self)
+        self.CO_twitter_lang.addItems(["en", "fr"])
+        self.CO_twitter_lang.hide()
 
         # starting date
         self.LE_starting_date = QLineEdit()
@@ -42,23 +40,20 @@ class Windows(QMainWindow):
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
 
+        # number of tweets/pages
+        self.LE_tweet_post_number = QLineEdit()
+        self.LE_tweet_post_number.setPlaceholderText("Number of tweets/posts")
+        onlyInt = QIntValidator()
+        onlyInt.setRange(1, 999)
+        self.LE_tweet_post_number.setValidator(onlyInt)
+
         # twitter checkbox
         self.CB_twitter = QCheckBox("Twitter")
         self.CB_twitter.stateChanged.connect(self.func_CB_twitter)
-        self.LE_twitter_post_number = QLineEdit()
-        self.LE_twitter_post_number.setPlaceholderText("Number of tweets")
-        onlyInt = QIntValidator()
-        onlyInt.setRange(1, 999)
-        self.LE_twitter_post_number.setValidator(onlyInt)
-        self.LE_twitter_post_number.hide()
 
         # facebook checkbox
         self.CB_facebook = QCheckBox("Facebook")
         self.CB_facebook.stateChanged.connect(self.func_CB_facebook)
-        self.LE_facebook_post_number = QLineEdit()
-        self.LE_facebook_post_number.setPlaceholderText("Number of post")
-        self.LE_facebook_post_number.setValidator(onlyInt)
-        self.LE_facebook_post_number.hide()
 
         # facebook page name
         self.LE_facebook_page_name = QLineEdit()
@@ -132,12 +127,11 @@ class Windows(QMainWindow):
         layout.addWidget(self.LE_keyWord)
         layout.addWidget(self.LE_starting_date)
         layout.addWidget(self.LE_ending_date)
+        layout.addWidget(self.LE_tweet_post_number)
         layout.addWidget(self.CB_twitter)
-        layout.addWidget(self.CO_lang)
-        layout.addWidget(self.LE_twitter_post_number)
+        layout.addWidget(self.CO_twitter_lang)
         layout.addWidget(self.CB_facebook)
         layout.addWidget(self.LE_facebook_page_name)
-        layout.addWidget(self.LE_facebook_post_number)
         layout.addWidget(self.LA_text_result)
         layout.addWidget(self.T_text_result)
         layout.addWidget(self.LA_text_info)
@@ -159,33 +153,26 @@ class Windows(QMainWindow):
         # show/hide widgets
         if self.CB_twitter.checkState():
             self.CB_facebook.setChecked(False)
-            self.LE_twitter_post_number.show()
-            self.CO_lang.show()
+            self.CO_twitter_lang.show()
+            self.T_text_result.setHorizontalHeaderLabels(
+                ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content'])
         else:
-            self.LE_twitter_post_number.hide()
-            self.CO_lang.hide()
-        self.T_user_result.hide()
-        self.LA_user_result.hide()
-        self.LA_text_result.hide()
-        self.T_text_result.hide()
-        self.LA_text_info.hide()
-        self.T_text_info.hide()
-        self.LE_json.hide()
-        self.BU_json.hide()
-        self.T_text_common.hide()
-        self.LA_text_common.hide()
-        self.resize(200, 250)
-        self.move(859, 364)
+            self.CO_twitter_lang.hide()
+        self.hideUselessWidgets()
 
     def func_CB_facebook(self):
         # show/hide widgets
         if self.CB_facebook.checkState():
             self.CB_twitter.setChecked(False)
-            self.LE_facebook_post_number.show()
             self.LE_facebook_page_name.show()
+            self.T_text_result.setHorizontalHeaderLabels(
+                ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username'])
         else:
-            self.LE_facebook_post_number.hide()
             self.LE_facebook_page_name.hide()
+        self.hideUselessWidgets()
+
+    def hideUselessWidgets(self):
+        self.statusBar().clearMessage()
         self.T_user_result.hide()
         self.LA_user_result.hide()
         self.LA_text_result.hide()
@@ -209,119 +196,103 @@ class Windows(QMainWindow):
         if not self.LE_json.text():
             self.statusBar().showMessage("ERROR: Please enter a file name")
         else:
-            self.statusBar().clearMessage()
+            self.statusBar().showMessage("SUCCESS: Files saved")
             if self.CB_twitter.checkState():
-                with open("{}_users.json".format(self.LE_json.text()), 'w') as outfile:
+                with open(".\\export\\{}_users.json".format(self.LE_json.text()), 'w') as outfile:
                     json.dump(data_users_parsed, outfile)
-            with open("{}_posts.json".format(self.LE_json.text()), 'w') as outfile:
+            with open(".\\export\\{}_posts.json".format(self.LE_json.text()), 'w') as outfile:
                 json.dump(data_posts_parsed, outfile)
-            with open("{}_analyse.json".format(self.LE_json.text()), 'w') as outfile:
+            with open(".\\export\\{}_analyse.json".format(self.LE_json.text()), 'w') as outfile:
                 json.dump(data_analyse_parsed, outfile)
 
     def func_BU_validate(self):
         # recover data and put it in dataframe
 
-        self.T_user_result.hide()
-        self.LA_user_result.hide()
+        self.hideUselessWidgets()
+
         if not self.LE_keyWord.text():
             self.statusBar().showMessage("ERROR: Please enter a keyword")
+        elif self.CB_facebook.checkState() and not self.LE_facebook_page_name.text():
+            self.statusBar().showMessage("ERROR: Please specify a page name")
+        elif not self.LE_tweet_post_number.text():
+            self.statusBar().showMessage("ERROR: Please specify a number of tweets")
+        elif not self.LE_starting_date.text() or not self.LE_ending_date.text():
+            self.statusBar().showMessage("ERROR: Please specify dates")
+        elif not self.CB_facebook.checkState() and not self.CB_twitter.checkState():
+            self.statusBar().showMessage("ERROR: Please select one social network")
         else:
             self.statusBar().clearMessage()
-            search = self.LE_keyWord.text()
+
             if self.CB_twitter.checkState():
-                if not self.LE_twitter_post_number.text():
-                    self.statusBar().showMessage("ERROR: Please specify a number of tweets")
-                elif not self.LE_starting_date.text() or not self.LE_ending_date.text():
-                    self.statusBar().showMessage("ERROR: Please specify dates")
-                else:
-                    # the scraped tweets, this is a generator
-                    scraped_tweets = sntwitter.TwitterSearchScraper(
-                        search + ' since:{} until:{} lang:{}'.format(self.LE_starting_date.text(),
-                                                                     self.LE_ending_date.text(),
-                                                                     self.CO_lang.currentText())).get_items()
-                    # slicing the generator to keep only the numbers of tweets needed
-                    sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_twitter_post_number.text()))
-                    # convert to a DataFrame and keep only relevant columns
-                    self.data_posts = pd.DataFrame(sliced_scraped_tweets)[
-                        ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content', 'user', 'url']]
+                # the scraped tweets, this is a generator
+                scraped_tweets = sntwitter.TwitterSearchScraper(
+                    '{} since:{} until:{} lang:{}'.format(self.LE_keyWord.text(),
+                                                          self.LE_starting_date.text(),
+                                                          self.LE_ending_date.text(),
+                                                          self.CO_twitter_lang.currentText())).get_items()
+                # slicing the generator to keep only the numbers of tweets needed
+                sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_tweet_post_number.text()))
+                # convert to a DataFrame and keep only relevant columns
+                self.data_posts = pd.DataFrame(sliced_scraped_tweets)[
+                    ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content', 'user', 'url']]
 
-                    # compute some info
-                    self.data_analyse = [None] * len(self.data_posts)
-                    for i in self.data_posts.index:
-                        strings = self.data_posts['content'][i].split()
-                        self.data_analyse[i] = {"word_count": len(strings)}
-                        self.data_analyse[i]['length'] = len(self.data_posts['content'][i])
-                        self.data_analyse[i]['source'] = self.data_posts['url'][i]
-                    self.data_analyse = pd.DataFrame(self.data_analyse)
+                # recover data from users
+                data_users_old = []
+                for i in range(len(self.data_posts)):
+                    data_users_old.append(self.data_posts['user'][i])
+                self.data_users = [None] * len(data_users_old)
+                user_keys = ['id', 'username', 'displayname', 'description', 'verified', 'followersCount',
+                             'created']
+                for i in range(len(data_users_old)):
+                    self.data_users[i] = {user_key: data_users_old[i][user_key] for user_key in user_keys}
+                self.data_users = pd.DataFrame(self.data_users)
 
-                    # recover data from users
-                    self.data_users_old = []
-                    for i in range(len(self.data_posts)):
-                        self.data_users_old.append(self.data_posts['user'][i])
-                    self.data_users = [None] * len(self.data_users_old)
-                    user_keys = ['id', 'username', 'displayname', 'description', 'verified', 'followersCount',
-                                 'created']
-                    for i in range(len(self.data_users_old)):
-                        self.data_users[i] = {user_key: self.data_users_old[i][user_key] for user_key in user_keys}
-                    self.data_users = pd.DataFrame(self.data_users)
-
-                    self.show_data_sample()
-                    self.BU_json.show()
-                    self.LE_json.show()
-                    self.resize(1200, 1000)
-                    self.move(350, 0)
-                    self.T_text_result.setHorizontalHeaderLabels(
-                        ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content'])
-            elif self.CB_facebook.checkState():
-                if not self.LE_facebook_post_number.text() or not self.LE_facebook_page_name.text():
-                    self.statusBar().showMessage("ERROR: Please specify a number of posts and a page name")
-                elif not self.LE_starting_date.text() or not self.LE_ending_date.text():
-                    self.statusBar().showMessage("ERROR: Please specify dates")
-                else:
-                    self.data_posts_old = []
-                    for post in get_posts(self.LE_facebook_page_name.text(), pages=100):
-                        # loading bar because it's very slow
-                        print("{}/{}".format(len(self.data_posts_old), self.LE_facebook_post_number.text()))
-                        # date verification
-                        year, month, day = self.LE_starting_date.text().split('-')
-                        if post['time'].replace(tzinfo=None) < datetime.datetime(int(year), int(month), int(day)):
-                            continue
-                        year, month, day = self.LE_ending_date.text().split('-')
-                        if post['time'].replace(tzinfo=None) > datetime.datetime(int(year), int(month), int(day)):
-                            continue
-                        # keyword verification
-                        if not post['text'] or self.LE_keyWord.text().lower() not in post['text'].lower():
-                            continue
-                        self.data_posts_old.append(post)
-                        # we leave when we have enough posts
-                        if len(self.data_posts_old) == int(self.LE_facebook_post_number.text()):
-                            break
-                    # tranformation in dataframe with only the columns needed
-                    self.data_posts = [None] * len(self.data_posts_old)
-                    post_keys = ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username', 'user_id',
-                                 'post_url']
-                    for i in range(len(self.data_posts_old)):
-                        self.data_posts[i] = {post_key: self.data_posts_old[i][post_key] for post_key in post_keys}
-                    self.data_posts = pd.DataFrame(self.data_posts)
-
-                    # some info about the posts
-                    self.data_analyse = [None] * len(self.data_posts)
-                    for i in self.data_posts.index:
-                        strings = self.data_posts['text'][i].split()
-                        self.data_analyse[i] = {"word_count": len(strings)}
-                        self.data_analyse[i]['length'] = len(self.data_posts['text'][i])
-                        self.data_analyse[i]['source'] = self.data_posts['post_url'][i]
-                    self.data_analyse = pd.DataFrame(self.data_analyse)
-
-                    self.show_data_sample()
-                    self.BU_json.show()
-                    self.LE_json.show()
-                    self.resize(1200, 1000)
-                    self.move(350, 0)
-                    self.T_text_result.setHorizontalHeaderLabels(
-                        ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username'])
+                id_text = 'content'
+                id_url = 'url'
             else:
-                self.statusBar().showMessage("ERROR: Please select one social network")
+                data_posts_old = []
+                for post in get_posts(self.LE_facebook_page_name.text(), pages=100):
+                    # loading bar because it's very slow
+                    print("{}/{}".format(len(data_posts_old), self.LE_tweet_post_number.text()))
+                    # date verification
+                    year, month, day = self.LE_starting_date.text().split('-')
+                    if post['time'].replace(tzinfo=None) < datetime.datetime(int(year), int(month), int(day)):
+                        continue
+                    year, month, day = self.LE_ending_date.text().split('-')
+                    if post['time'].replace(tzinfo=None) > datetime.datetime(int(year), int(month), int(day)):
+                        continue
+                    # keyword verification
+                    if not post['text'] or self.LE_keyWord.text().lower() not in post['text'].lower():
+                        continue
+                    data_posts_old.append(post)
+                    # we leave when we have enough posts
+                    if len(data_posts_old) == int(self.LE_tweet_post_number.text()):
+                        break
+                # tranformation in dataframe with only the columns needed
+                self.data_posts = [None] * len(data_posts_old)
+                post_keys = ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username', 'user_id',
+                             'post_url']
+                for i in range(len(data_posts_old)):
+                    self.data_posts[i] = {post_key: data_posts_old[i][post_key] for post_key in post_keys}
+                self.data_posts = pd.DataFrame(self.data_posts)
+
+                id_text = 'text'
+                id_url = 'post_url'
+
+            # compute some info
+            self.data_analyse = [None] * len(self.data_posts)
+            for i in self.data_posts.index:
+                strings = self.data_posts[id_text][i].split()
+                self.data_analyse[i] = {"word_count": len(strings)}
+                self.data_analyse[i]['length'] = len(self.data_posts[id_text][i])
+                self.data_analyse[i]['source'] = self.data_posts[id_url][i]
+            self.data_analyse = pd.DataFrame(self.data_analyse)
+
+            self.show_data_sample()
+            self.BU_json.show()
+            self.LE_json.show()
+            self.resize(1200, 1000)
+            self.move(350, 0)
 
     def show_data_sample(self):
         # fill in the tables
