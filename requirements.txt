@@ -1,0 +1,9 @@
+# scraper API
+git+https://github.com/JustAnotherArchivist/snscrape.git
+facebook-scraper==0.2.37
+
+# dataframe
+pandas==1.2.4
+
+# gui
+PyQt5==5.15.4
