@@ -14,7 +14,7 @@ For Twitter
 -The first five tweets and users info are shown in the gui. The gui does not allow the selection of particular attributes.  
 -You can export it in json.
 
-For Facebook  
+For Facebook (WARNING : SLOW) 
 -You enter a keyword, the dates (beginning and ending), the number of posts and the name of the page (Facebook does not have a general search bar like Twitter).  
 -The program calls the API and send you back the posts data (I did not implement yet the users data).  
 -The first five posts info are shown in the gui. The gui does not allow the selection of particular attributes.  
