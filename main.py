@@ -6,7 +6,7 @@ from facebook_scraper import get_posts
 import itertools
 import json
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, \
-    QVBoxLayout, QLabel, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem
+    QVBoxLayout, QLabel, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem, QComboBox
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp
 from collections import Counter
@@ -25,6 +25,11 @@ class Windows(QMainWindow):
         # keyword
         self.LE_keyWord = QLineEdit()
         self.LE_keyWord.setPlaceholderText("Enter keyword")
+
+        # lang (twitter only)
+        self.CO_lang = QComboBox(self)
+        self.CO_lang.addItems(["en", "fr"])
+        self.CO_lang.hide()
 
         # starting date
         self.LE_starting_date = QLineEdit()
@@ -106,12 +111,10 @@ class Windows(QMainWindow):
 
         # button for validation
         self.BU_validate = QPushButton("Confirm")
-        # on connecte le signal "clicked" à la méthode "appui_BU_validate_copie"
         self.BU_validate.clicked.connect(self.func_BU_validate)
 
         # button for tables' exportation (all tweets/posts, all info and all users if it's twitter) on json format
         self.BU_json = QPushButton("Export")
-        # on connecte le signal "clicked" à la méthode "appui_BU_json_copie"
         self.BU_json.clicked.connect(self.func_BU_json)
         self.BU_json.hide()
 
@@ -130,6 +133,7 @@ class Windows(QMainWindow):
         layout.addWidget(self.LE_starting_date)
         layout.addWidget(self.LE_ending_date)
         layout.addWidget(self.CB_twitter)
+        layout.addWidget(self.CO_lang)
         layout.addWidget(self.LE_twitter_post_number)
         layout.addWidget(self.CB_facebook)
         layout.addWidget(self.LE_facebook_page_name)
@@ -156,8 +160,10 @@ class Windows(QMainWindow):
         if self.CB_twitter.checkState():
             self.CB_facebook.setChecked(False)
             self.LE_twitter_post_number.show()
+            self.CO_lang.show()
         else:
             self.LE_twitter_post_number.hide()
+            self.CO_lang.hide()
         self.T_user_result.hide()
         self.LA_user_result.hide()
         self.LA_text_result.hide()
@@ -230,8 +236,9 @@ class Windows(QMainWindow):
                 else:
                     # the scraped tweets, this is a generator
                     scraped_tweets = sntwitter.TwitterSearchScraper(
-                        search + ' since:{} until:{} lang:en'.format(self.LE_starting_date.text(),
-                                                                     self.LE_ending_date.text())).get_items()
+                        search + ' since:{} until:{} lang:{}'.format(self.LE_starting_date.text(),
+                                                                     self.LE_ending_date.text(),
+                                                                     self.CO_lang.currentText())).get_items()
                     # slicing the generator to keep only the numbers of tweets needed
                     sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_twitter_post_number.text()))
                     # convert to a DataFrame and keep only relevant columns
@@ -241,8 +248,8 @@ class Windows(QMainWindow):
                     # compute some info
                     self.data_analyse = [None] * len(self.data_posts)
                     for i in self.data_posts.index:
-                        str = self.data_posts['content'][i].split()
-                        self.data_analyse[i] = {"word_count": len(str)}
+                        strings = self.data_posts['content'][i].split()
+                        self.data_analyse[i] = {"word_count": len(strings)}
                         self.data_analyse[i]['length'] = len(self.data_posts['content'][i])
                         self.data_analyse[i]['source'] = self.data_posts['url'][i]
                     self.data_analyse = pd.DataFrame(self.data_analyse)
@@ -300,8 +307,8 @@ class Windows(QMainWindow):
                     # some info about the posts
                     self.data_analyse = [None] * len(self.data_posts)
                     for i in self.data_posts.index:
-                        str = self.data_posts['text'][i].split()
-                        self.data_analyse[i] = {"word_count": len(str)}
+                        strings = self.data_posts['text'][i].split()
+                        self.data_analyse[i] = {"word_count": len(strings)}
                         self.data_analyse[i]['length'] = len(self.data_posts['text'][i])
                         self.data_analyse[i]['source'] = self.data_posts['post_url'][i]
                     self.data_analyse = pd.DataFrame(self.data_analyse)
@@ -324,7 +331,7 @@ class Windows(QMainWindow):
             for j in range(len(self.data_posts.columns) - 2):
                 self.T_text_result.setItem(i, j, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
 
-        # show infos about those 5 tweets/posts
+        # show info about those 5 tweets/posts
         for i in range(5):
             for j in range(len(self.data_analyse.columns)):
                 self.T_text_info.setItem(i, j, QTableWidgetItem("{}".format(self.data_analyse.iloc[i, j])))
