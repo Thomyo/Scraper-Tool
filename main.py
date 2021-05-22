@@ -705,7 +705,7 @@ class Windows(QMainWindow):
             self.statusBar().clearMessage()
             id_text = "Null"
             id_url = "Null"
-            print(self.list_param_posts)
+
             if self.CB_twitter.checkState():
                 # the scraped tweets, this is a generator
                 scraped_tweets = sntwitter.TwitterSearchScraper(
@@ -872,7 +872,7 @@ if not app:
     app = QApplication(sys.argv)
 
 Window = Windows()
-Window.resize(app.primaryScreen().size().width() - 50, app.primaryScreen().size().height() - 100)
+Window.resize(app.primaryScreen().size().width() - 5, app.primaryScreen().size().height() - 100)
 Window.show()
 
 app.exec_()
