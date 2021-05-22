@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 import pandas as pd
 import datetime
 import snscrape.modules.twitter as sntwitter
@@ -6,22 +7,27 @@ from facebook_scraper import get_posts
 import itertools
 import json
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, \
-    QVBoxLayout, QLabel, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem, QComboBox
+    QLabel, QLineEdit, QCheckBox, QTableWidget, QTableWidgetItem, QComboBox, QHBoxLayout, QFrame, QFormLayout
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp
 from collections import Counter
 
+
 class Windows(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
+        self.setWindowTitle("Scraper")
         self.statusBar().setStyleSheet("color : red")
         self.title = QLabel("Data mining")
+        self.title.setStyleSheet("text-decoration: underline")
         self.data_posts = None
         self.data_users = None
         self.data_analyse = None
+        self.list_param_users = []
+        self.list_param_posts = []
 
         # keyword
-        self.LE_keyWord = QLineEdit()
+        self.LE_keyWord = QLineEdit("macron")
         self.LE_keyWord.setPlaceholderText("Enter keyword")
 
         # lang (twitter only)
@@ -30,18 +36,18 @@ class Windows(QMainWindow):
         self.CO_twitter_lang.hide()
 
         # starting date
-        self.LE_starting_date = QLineEdit()
+        self.LE_starting_date = QLineEdit("2020-1-1")
         self.LE_starting_date.setPlaceholderText("Starting date : YYYY-MM-DD")
         onlyDate = QRegExpValidator(QRegExp("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"))
         self.LE_starting_date.setValidator(onlyDate)
 
         # ending date
-        self.LE_ending_date = QLineEdit()
+        self.LE_ending_date = QLineEdit("2021-1-1")
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
 
         # number of tweets/pages
-        self.LE_tweet_post_number = QLineEdit()
+        self.LE_tweet_post_number = QLineEdit("15")
         self.LE_tweet_post_number.setPlaceholderText("Number of tweets/posts")
         onlyInt = QIntValidator()
         onlyInt.setRange(1, 999)
@@ -49,10 +55,245 @@ class Windows(QMainWindow):
 
         # twitter checkbox
         self.CB_twitter = QCheckBox("Twitter")
+        self.CB_twitter.setStyleSheet("text-decoration: underline")
         self.CB_twitter.stateChanged.connect(self.func_CB_twitter)
+
+        # selection of paramters
+        self.list_check_box = []
+        # twitter tweet
+        self.LA_tweet_twitter = QLabel("Parameters Tweet Info :")
+        self.LA_tweet_twitter.hide()
+        layout_CB_tweet_twitter = QHBoxLayout()
+        self.CB_tweet_twitter_url = QCheckBox("url")
+        self.list_check_box.append(self.CB_tweet_twitter_url)
+        self.CB_tweet_twitter_url.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_url, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_url)
+        self.CB_tweet_twitter_date = QCheckBox("date")
+        self.list_check_box.append(self.CB_tweet_twitter_date)
+        self.CB_tweet_twitter_date.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_date, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_date)
+        self.CB_tweet_twitter_content = QCheckBox("content")
+        self.list_check_box.append(self.CB_tweet_twitter_content)
+        self.CB_tweet_twitter_content.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_content, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_content)
+        self.CB_tweet_twitter_renderedContent = QCheckBox("renderedContent")
+        self.list_check_box.append(self.CB_tweet_twitter_renderedContent)
+        self.CB_tweet_twitter_renderedContent.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_renderedContent, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_renderedContent)
+        self.CB_tweet_twitter_id = QCheckBox("id")
+        self.list_check_box.append(self.CB_tweet_twitter_id)
+        self.CB_tweet_twitter_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_id, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_id)
+        self.CB_tweet_twitter_user = QCheckBox("user")
+        self.list_check_box.append(self.CB_tweet_twitter_user)
+        self.CB_tweet_twitter_user.stateChanged.connect(
+            lambda: self.parameters_twitter_user(self.CB_tweet_twitter_user, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_user)
+        self.CB_tweet_twitter_outlinks = QCheckBox("outlinks")
+        self.list_check_box.append(self.CB_tweet_twitter_outlinks)
+        self.CB_tweet_twitter_outlinks.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_outlinks, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_outlinks)
+        self.CB_tweet_twitter_tcooutlinks = QCheckBox("tcooutlinks")
+        self.list_check_box.append(self.CB_tweet_twitter_tcooutlinks)
+        self.CB_tweet_twitter_tcooutlinks.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_tcooutlinks, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_tcooutlinks)
+        self.CB_tweet_twitter_replyCount = QCheckBox("replyCount")
+        self.list_check_box.append(self.CB_tweet_twitter_replyCount)
+        self.CB_tweet_twitter_replyCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_replyCount, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_replyCount)
+        self.CB_tweet_twitter_retweetCount = QCheckBox("retweetCount")
+        self.list_check_box.append(self.CB_tweet_twitter_retweetCount)
+        self.CB_tweet_twitter_retweetCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_retweetCount, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_retweetCount)
+        self.CB_tweet_twitter_likeCount = QCheckBox("likeCount")
+        self.list_check_box.append(self.CB_tweet_twitter_likeCount)
+        self.CB_tweet_twitter_likeCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_likeCount, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_likeCount)
+        self.CB_tweet_twitter_quoteCount = QCheckBox("quoteCount")
+        self.list_check_box.append(self.CB_tweet_twitter_quoteCount)
+        self.CB_tweet_twitter_quoteCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_quoteCount, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_quoteCount)
+        self.CB_tweet_twitter_conversationId = QCheckBox("conversationId")
+        self.list_check_box.append(self.CB_tweet_twitter_conversationId)
+        self.CB_tweet_twitter_conversationId.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_conversationId, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_conversationId)
+        self.CB_tweet_twitter_lang = QCheckBox("lang")
+        self.list_check_box.append(self.CB_tweet_twitter_lang)
+        self.CB_tweet_twitter_lang.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_lang, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_lang)
+        self.CB_tweet_twitter_source = QCheckBox("source")
+        self.list_check_box.append(self.CB_tweet_twitter_source)
+        self.CB_tweet_twitter_source.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_source, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_source)
+        self.CB_tweet_twitter_sourceUrl = QCheckBox("sourceUrl")
+        self.list_check_box.append(self.CB_tweet_twitter_sourceUrl)
+        self.CB_tweet_twitter_sourceUrl.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_sourceUrl, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_sourceUrl)
+        self.CB_tweet_twitter_sourceLabel = QCheckBox("sourceLabel")
+        self.list_check_box.append(self.CB_tweet_twitter_sourceLabel)
+        self.CB_tweet_twitter_sourceLabel.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_sourceLabel, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_sourceLabel)
+        self.CB_tweet_twitter_media = QCheckBox("media")
+        self.list_check_box.append(self.CB_tweet_twitter_media)
+        self.CB_tweet_twitter_media.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_media, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_media)
+        self.CB_tweet_twitter_retweetedTweet = QCheckBox("retweetedTweet")
+        self.list_check_box.append(self.CB_tweet_twitter_retweetedTweet)
+        self.CB_tweet_twitter_retweetedTweet.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_retweetedTweet, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_retweetedTweet)
+        self.CB_tweet_twitter_quotedTweet = QCheckBox("quotedTweet")
+        self.list_check_box.append(self.CB_tweet_twitter_quotedTweet)
+        self.CB_tweet_twitter_quotedTweet.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_quotedTweet, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_quotedTweet)
+        self.CB_tweet_twitter_mentionedUsers = QCheckBox("mentionedUsers")
+        self.list_check_box.append(self.CB_tweet_twitter_mentionedUsers)
+        self.CB_tweet_twitter_mentionedUsers.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_mentionedUsers, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_mentionedUsers)
+        self.CB_tweet_twitter_coordinates = QCheckBox("coordinates")
+        self.list_check_box.append(self.CB_tweet_twitter_coordinates)
+        self.CB_tweet_twitter_coordinates.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_coordinates, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_coordinates)
+        self.CB_tweet_twitter_place = QCheckBox("place")
+        self.list_check_box.append(self.CB_tweet_twitter_place)
+        self.CB_tweet_twitter_place.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_tweet_twitter_place, self.list_param_posts))
+        layout_CB_tweet_twitter.addWidget(self.CB_tweet_twitter_place)
+        self.FR_tweet_twitter = QFrame()
+        self.FR_tweet_twitter.setLayout(layout_CB_tweet_twitter)
+        self.FR_tweet_twitter.hide()
+        # twitter user
+        self.LA_user_twitter = QLabel("Parameters Users Info (user needed) :")
+        self.LA_user_twitter.hide()
+        self.list_check_box_user_twitter = []
+        layout_CB_user_twitter = QHBoxLayout()
+        self.CB_user_twitter_username = QCheckBox("username")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_username)
+        self.CB_user_twitter_username.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_username, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_username)
+        self.CB_user_twitter_displayname = QCheckBox("displayname")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_displayname)
+        self.CB_user_twitter_displayname.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_displayname, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_displayname)
+        self.CB_user_twitter_id = QCheckBox("id")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_id)
+        self.CB_user_twitter_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_id, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_id)
+        self.CB_user_twitter_description = QCheckBox("description")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_description)
+        self.CB_user_twitter_description.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_description, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_description)
+        self.CB_user_twitter_rawDescription = QCheckBox("rawDescription")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_rawDescription)
+        self.CB_user_twitter_rawDescription.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_rawDescription, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_rawDescription)
+        self.CB_user_twitter_descriptionUrls = QCheckBox("descriptionUrls")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_descriptionUrls)
+        self.CB_user_twitter_descriptionUrls.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_descriptionUrls, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_descriptionUrls)
+        self.CB_user_twitter_verified = QCheckBox("verified")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_verified)
+        self.CB_user_twitter_verified.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_verified, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_verified)
+        self.CB_user_twitter_created = QCheckBox("created")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_created)
+        self.CB_user_twitter_created.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_created, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_created)
+        self.CB_user_twitter_followersCount = QCheckBox("followersCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_followersCount)
+        self.CB_user_twitter_followersCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_followersCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_followersCount)
+        self.CB_user_twitter_friendsCount = QCheckBox("friendsCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_friendsCount)
+        self.CB_user_twitter_friendsCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_friendsCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_friendsCount)
+        self.CB_user_twitter_statusesCount = QCheckBox("statusesCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_statusesCount)
+        self.CB_user_twitter_statusesCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_statusesCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_statusesCount)
+        self.CB_user_twitter_favouritesCount = QCheckBox("favouritesCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_favouritesCount)
+        self.CB_user_twitter_favouritesCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_favouritesCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_favouritesCount)
+        self.CB_user_twitter_listedCount = QCheckBox("listedCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_listedCount)
+        self.CB_user_twitter_listedCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_listedCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_listedCount)
+        self.CB_user_twitter_mediaCount = QCheckBox("mediaCount")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_mediaCount)
+        self.CB_user_twitter_mediaCount.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_mediaCount, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_mediaCount)
+        self.CB_user_twitter_location = QCheckBox("location")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_location)
+        self.CB_user_twitter_location.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_location, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_location)
+        self.CB_user_twitter_protected = QCheckBox("protected")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_protected)
+        self.CB_user_twitter_protected.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_protected, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_protected)
+        self.CB_user_twitter_linkUrl = QCheckBox("linkUrl")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_linkUrl)
+        self.CB_user_twitter_linkUrl.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_linkUrl, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_linkUrl)
+        self.CB_user_twitter_linkTcourl = QCheckBox("linkTcourl")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_linkTcourl)
+        self.CB_user_twitter_linkTcourl.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_linkTcourl, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_linkTcourl)
+        self.CB_user_twitter_profileImageUrl = QCheckBox("profileImageUrl")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_profileImageUrl)
+        self.CB_user_twitter_profileImageUrl.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_profileImageUrl, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_profileImageUrl)
+        self.CB_user_twitter_profileBannerUrl = QCheckBox("profileBannerUrl")
+        self.list_check_box_user_twitter.append(self.CB_user_twitter_profileBannerUrl)
+        self.CB_user_twitter_profileBannerUrl.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_user_twitter_profileBannerUrl, self.list_param_users))
+        layout_CB_user_twitter.addWidget(self.CB_user_twitter_profileBannerUrl)
+        self.FR_user_twitter = QFrame()
+        self.FR_user_twitter.setLayout(layout_CB_user_twitter)
+        self.FR_user_twitter.hide()
 
         # facebook checkbox
         self.CB_facebook = QCheckBox("Facebook")
+        self.CB_facebook.setStyleSheet("text-decoration: underline")
         self.CB_facebook.stateChanged.connect(self.func_CB_facebook)
 
         # facebook page name
@@ -60,25 +301,20 @@ class Windows(QMainWindow):
         self.LE_facebook_page_name.setPlaceholderText("Enter Facebook Page")
         self.LE_facebook_page_name.hide()
 
-        # table for showing the five first tweets/posts
-        self.LA_text_result = QLabel("First 5 tweets/posts")
+        # table for showing tweets/posts
+        self.LA_text_result = QLabel("Tweets/posts")
         self.LA_text_result.hide()
         self.T_text_result = QTableWidget()
-        self.T_text_result.setRowCount(5)
-        self.T_text_result.setColumnCount(7)
         header = self.T_text_result.horizontalHeader()
         header.setStretchLastSection(True)
         self.T_text_result.hide()
 
-        # table for showing some info about those 5 tweets/posts (words count, letters count, link)
-        self.LA_text_info = QLabel("Info about the first 5 tweets/posts")
+        # table for showing some info about those tweets/posts (words count, letters count, link)
+        self.LA_text_info = QLabel("Info about the tweets/posts")
         self.LA_text_info.hide()
         self.T_text_info = QTableWidget()
-        self.T_text_info.setRowCount(5)
-        self.T_text_info.setColumnCount(3)
         header = self.T_text_info.horizontalHeader()
         header.setStretchLastSection(True)
-        self.T_text_info.setHorizontalHeaderLabels(['words count', 'letters count', 'link'])
         self.T_text_info.hide()
 
         # table for showing the five most common words on all the tweets/posts
@@ -92,16 +328,12 @@ class Windows(QMainWindow):
         self.T_text_common.setHorizontalHeaderLabels(['first', 'second', 'third', 'fourth', 'fifth'])
         self.T_text_common.hide()
 
-        # table for showing the five users of those five tweets/posts (twitter only)
-        self.LA_user_result = QLabel("First 5 users")
+        # table for showing the users of those tweets/posts (twitter only)
+        self.LA_user_result = QLabel("Users")
         self.LA_user_result.hide()
         self.T_user_result = QTableWidget()
-        self.T_user_result.setRowCount(5)
-        self.T_user_result.setColumnCount(7)
         header = self.T_user_result.horizontalHeader()
         header.setStretchLastSection(True)
-        self.T_user_result.setHorizontalHeaderLabels(
-            ['id', 'username', 'displayname', 'description', 'verified', 'followersCount', 'created'])
         self.T_user_result.hide()
 
         # button for validation
@@ -122,7 +354,7 @@ class Windows(QMainWindow):
 
         # layout
         self.widgets = QWidget()
-        layout = QVBoxLayout()
+        layout = QFormLayout()
         layout.addWidget(self.title)
         layout.addWidget(self.LE_keyWord)
         layout.addWidget(self.LE_starting_date)
@@ -130,6 +362,10 @@ class Windows(QMainWindow):
         layout.addWidget(self.LE_tweet_post_number)
         layout.addWidget(self.CB_twitter)
         layout.addWidget(self.CO_twitter_lang)
+        layout.addWidget(self.LA_tweet_twitter)
+        layout.addRow(self.FR_tweet_twitter)
+        layout.addWidget(self.LA_user_twitter)
+        layout.addRow(self.FR_user_twitter)
         layout.addWidget(self.CB_facebook)
         layout.addWidget(self.LE_facebook_page_name)
         layout.addWidget(self.LA_text_result)
@@ -146,18 +382,37 @@ class Windows(QMainWindow):
         self.widgets.setLayout(layout)
         self.setCentralWidget(self.widgets)
 
-        self.setWindowTitle("Scraper")
-        self.resize(200, 250)
+    def parameters_twitter_user(self, check_box, list_parameters):
+        # uncheck all user data if user is disable
+        self.parameters_add_remove(check_box, list_parameters)
+        if not check_box.checkState():
+            for one_check_box in self.list_check_box_user_twitter:
+                one_check_box.setChecked(False)
+
+    def parameters_add_remove(self, check_box, list_parameters):
+        # synchronize the list of parameters with the check boxes
+        if check_box.checkState():
+            list_parameters.append("{}".format(check_box.text()))
+            if check_box in self.list_check_box_user_twitter:
+                self.CB_tweet_twitter_user.setChecked(True)
+        elif check_box.text() in list_parameters:
+            list_parameters.remove("{}".format(check_box.text()))
 
     def func_CB_twitter(self):
         # show/hide widgets
         if self.CB_twitter.checkState():
             self.CB_facebook.setChecked(False)
             self.CO_twitter_lang.show()
-            self.T_text_result.setHorizontalHeaderLabels(
-                ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content'])
+            self.LA_tweet_twitter.show()
+            self.FR_tweet_twitter.show()
+            self.LA_user_twitter.show()
+            self.FR_user_twitter.show()
         else:
             self.CO_twitter_lang.hide()
+            self.LA_tweet_twitter.hide()
+            self.FR_tweet_twitter.hide()
+            self.LA_user_twitter.hide()
+            self.FR_user_twitter.hide()
         self.hideUselessWidgets()
 
     def func_CB_facebook(self):
@@ -165,13 +420,12 @@ class Windows(QMainWindow):
         if self.CB_facebook.checkState():
             self.CB_twitter.setChecked(False)
             self.LE_facebook_page_name.show()
-            self.T_text_result.setHorizontalHeaderLabels(
-                ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username'])
         else:
             self.LE_facebook_page_name.hide()
         self.hideUselessWidgets()
 
     def hideUselessWidgets(self):
+        # hide widgets and clear data
         self.statusBar().clearMessage()
         self.T_user_result.hide()
         self.LA_user_result.hide()
@@ -183,32 +437,41 @@ class Windows(QMainWindow):
         self.BU_json.hide()
         self.T_text_common.hide()
         self.LA_text_common.hide()
-        self.resize(200, 250)
-        self.move(859, 364)
+        self.LE_json.clear()
+        self.data_posts = None
+        self.data_users = None
+        self.data_analyse = None
 
     def func_BU_json(self):
         # export the dataframes on json format
-        if self.CB_twitter.checkState():
-            data_users_parsed = json.loads(self.data_users.to_json(orient="split"))
-        data_posts_parsed = json.loads(self.data_posts.to_json(orient="split"))
-        data_analyse_parsed = json.loads(self.data_analyse.to_json(orient="split"))
-
-        if not self.LE_json.text():
+        data_users_parsed = None
+        if self.data_posts.empty:
+            self.statusBar().showMessage("ERROR: Selection empty")
+        elif not self.LE_json.text():
             self.statusBar().showMessage("ERROR: Please enter a file name")
         else:
-            self.statusBar().showMessage("SUCCESS: Files saved")
-            if self.CB_twitter.checkState():
-                with open(".\\export\\{}_users.json".format(self.LE_json.text()), 'w') as outfile:
-                    json.dump(data_users_parsed, outfile)
+            data_posts_parsed = json.loads(self.data_posts.to_json(orient="split"))
             with open(".\\export\\{}_posts.json".format(self.LE_json.text()), 'w') as outfile:
                 json.dump(data_posts_parsed, outfile)
-            with open(".\\export\\{}_analyse.json".format(self.LE_json.text()), 'w') as outfile:
-                json.dump(data_analyse_parsed, outfile)
+            if self.data_users is not None and not self.data_users.empty:
+                data_users_parsed = json.loads(self.data_users.to_json(orient="split"))
+                with open(".\\export\\{}_users.json".format(self.LE_json.text()), 'w') as outfile:
+                    json.dump(data_users_parsed, outfile)
+            if self.data_analyse is not None and not self.data_analyse.empty:
+                data_analyse_parsed = json.loads(self.data_analyse.to_json(orient="split"))
+                with open(".\\export\\{}_analyse.json".format(self.LE_json.text()), 'w') as outfile:
+                    json.dump(data_analyse_parsed, outfile)
+
+            self.statusBar().showMessage("SUCCESS: Files saved")
 
     def func_BU_validate(self):
         # recover data and put it in dataframe
-
         self.hideUselessWidgets()
+        self.data_analyse = None
+        self.T_user_result.clearContents()
+        self.T_text_info.clearContents()
+        self.T_text_result.clearContents()
+        self.T_text_common.clearContents()
 
         if not self.LE_keyWord.text():
             self.statusBar().showMessage("ERROR: Please enter a keyword")
@@ -222,6 +485,8 @@ class Windows(QMainWindow):
             self.statusBar().showMessage("ERROR: Please select one social network")
         else:
             self.statusBar().clearMessage()
+            id_text = "Null"
+            id_url = "Null"
 
             if self.CB_twitter.checkState():
                 # the scraped tweets, this is a generator
@@ -233,22 +498,25 @@ class Windows(QMainWindow):
                 # slicing the generator to keep only the numbers of tweets needed
                 sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_tweet_post_number.text()))
                 # convert to a DataFrame and keep only relevant columns
-                self.data_posts = pd.DataFrame(sliced_scraped_tweets)[
-                    ['id', 'date', 'replyCount', 'retweetCount', 'likeCount', 'lang', 'content', 'user', 'url']]
+                self.data_posts = pd.DataFrame(sliced_scraped_tweets)[self.list_param_posts]
 
                 # recover data from users
                 data_users_old = []
-                for i in range(len(self.data_posts)):
-                    data_users_old.append(self.data_posts['user'][i])
-                self.data_users = [None] * len(data_users_old)
-                user_keys = ['id', 'username', 'displayname', 'description', 'verified', 'followersCount',
-                             'created']
-                for i in range(len(data_users_old)):
-                    self.data_users[i] = {user_key: data_users_old[i][user_key] for user_key in user_keys}
-                self.data_users = pd.DataFrame(self.data_users)
+                if 'user' in self.data_posts:
+                    for i in range(len(self.data_posts)):
+                        data_users_old.append(self.data_posts['user'][i])
+                    self.data_users = [None] * len(data_users_old)
+                    user_keys = self.list_param_users
 
-                id_text = 'content'
-                id_url = 'url'
+                    for i in range(len(data_users_old)):
+                        self.data_users[i] = {user_key: data_users_old[i][user_key] for user_key in user_keys}
+                    self.data_users = pd.DataFrame(self.data_users)
+                if 'content' in self.data_posts:
+                    id_text = 'content'
+                elif 'renderedContent' in self.data_posts:
+                    id_text = 'renderedContent'
+                if 'url' in self.data_posts:
+                    id_url = 'url'
             else:
                 data_posts_old = []
                 for post in get_posts(self.LE_facebook_page_name.text(), pages=100):
@@ -278,65 +546,113 @@ class Windows(QMainWindow):
 
                 id_text = 'text'
                 id_url = 'post_url'
-
-            # compute some info
-            self.data_analyse = [None] * len(self.data_posts)
-            for i in self.data_posts.index:
-                strings = self.data_posts[id_text][i].split()
-                self.data_analyse[i] = {"word_count": len(strings)}
-                self.data_analyse[i]['length'] = len(self.data_posts[id_text][i])
-                self.data_analyse[i]['source'] = self.data_posts[id_url][i]
-            self.data_analyse = pd.DataFrame(self.data_analyse)
-
-            self.show_data_sample()
+            if id_text in self.data_posts or id_url in self.data_posts:
+                # compute some info
+                horizontal_header = []
+                self.data_analyse = [None] * len(self.data_posts)
+                for i in self.data_posts.index:
+                    if id_text in self.data_posts:
+                        self.data_analyse[i] = {"word_count": len(self.data_posts[id_text][i].split())}
+                        self.data_analyse[i]['length'] = len(self.data_posts[id_text][i])
+                        if 'words count' not in horizontal_header:
+                            horizontal_header.extend(('words count', 'letters count'))
+                    if id_url in self.data_posts:
+                        if self.data_analyse[i] is None:
+                            self.data_analyse[i] = {'source': self.data_posts[id_url][i]}
+                        else:
+                            self.data_analyse[i]['source'] = self.data_posts[id_url][i]
+                        if 'source' not in horizontal_header:
+                            horizontal_header.append('source')
+                self.T_text_info.setColumnCount(len(horizontal_header))
+                self.T_text_info.setHorizontalHeaderLabels(horizontal_header)
+                self.data_analyse = pd.DataFrame(self.data_analyse)
+            self.show_data_sample(id_text)
             self.BU_json.show()
             self.LE_json.show()
-            self.resize(1200, 1000)
-            self.move(350, 0)
 
-    def show_data_sample(self):
+    def unCheckCB(self):
+        # uncheck all check boxes
+        for check_box in self.list_check_box:
+            check_box.setChecked(False)
+        for check_box in self.list_check_box_user_twitter:
+            check_box.setChecked(False)
+
+    def removeNotShowable(self, list_param, dataframe):
+        # remove all parameters which are not showable (it's only for the tables, the dataframe is untouched)
+        pd.set_option('display.max_columns', None)
+        list_tmp = []
+        for param in list_param:
+            if isinstance(dataframe[param][0], (str, np.int64, pd._libs.tslibs.timestamps.Timestamp, np.bool_)):
+                list_tmp.append(param)
+        list_param.clear()
+        for param in list_tmp:
+            list_param.append(param)
+
+    def show_data_sample(self, id_text):
         # fill in the tables
+        self.removeNotShowable(self.list_param_posts, self.data_posts)
+        self.T_text_result.setColumnCount(len(self.list_param_posts))
+        self.T_text_result.setRowCount(len(self.data_posts))
+        self.T_text_result.setHorizontalHeaderLabels(self.list_param_posts)
+        if 'user' in self.data_posts:
+            self.removeNotShowable(self.list_param_users, self.data_users)
+            self.T_user_result.setColumnCount(len(self.list_param_users))
+            self.T_user_result.setRowCount(len(self.data_users))
+            self.T_user_result.setHorizontalHeaderLabels(self.list_param_users)
+        self.T_text_info.setRowCount(len(self.data_posts))
+        self.unCheckCB()
 
-        # show 5 posts/tweets
-        for i in range(5):
-            for j in range(len(self.data_posts.columns) - 2):
-                self.T_text_result.setItem(i, j, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
+        # show posts/tweets
+        for i in range(len(self.data_posts)):
+            h = 0
+            for j in range(len(self.data_posts.columns)):
+                if isinstance(self.data_posts.iloc[i, j],
+                              (str, np.int64, pd._libs.tslibs.timestamps.Timestamp, np.bool_)):
+                    self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
+                    h += 1
 
-        # show info about those 5 tweets/posts
-        for i in range(5):
-            for j in range(len(self.data_analyse.columns)):
-                self.T_text_info.setItem(i, j, QTableWidgetItem("{}".format(self.data_analyse.iloc[i, j])))
+        # show info about those tweets/posts
+        if self.data_analyse is not None:
+            for i in range(len(self.data_posts)):
+                for j in range(len(self.data_analyse.columns)):
+                    self.T_text_info.setItem(i, j, QTableWidgetItem("{}".format(self.data_analyse.iloc[i, j])))
+            self.LA_text_info.show()
+            self.T_text_info.show()
 
-        # Compute the most common words
-        if self.CB_twitter.checkState():
-            common_words = Counter(" ".join(self.data_posts["content"]).split()).most_common(5)
-        else:
-            common_words = Counter(" ".join(self.data_posts["text"]).split()).most_common(5)
-        i = 0
-        for x, y in common_words:
-            self.T_text_common.setItem(0, i, QTableWidgetItem("{}".format(x)))
-            self.T_text_common.setItem(1, i, QTableWidgetItem("{}".format(y)))
-            i += 1
+        # Show most common words
+        if id_text in self.data_posts:
+            common_words = Counter(" ".join(self.data_posts[id_text]).split()).most_common(5)
 
-        # Show 5 users if it's twitter
-        if self.CB_twitter.checkState():
-            for i in range(5):
+            i = 0
+            for x, y in common_words:
+                self.T_text_common.setItem(0, i, QTableWidgetItem("{}".format(x)))
+                self.T_text_common.setItem(1, i, QTableWidgetItem("{}".format(y)))
+                i += 1
+            self.LA_text_common.show()
+            self.T_text_common.show()
+
+        # Show users if it's twitter
+        if self.CB_twitter.checkState() and 'user' in self.data_posts:
+            for i in range(len(self.data_users)):
+                h = 0
                 for j in range(len(self.data_users.columns)):
-                    self.T_user_result.setItem(i, j, QTableWidgetItem("{}".format(self.data_users.iloc[i, j])))
+                    if isinstance(self.data_users.iloc[i, j],
+                                  (str, np.int64, pd._libs.tslibs.timestamps.Timestamp, np.bool_)):
+                        self.T_user_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_users.iloc[i, j])))
+                        h += 1
             self.T_user_result.show()
             self.LA_user_result.show()
+
         self.LA_text_result.show()
         self.T_text_result.show()
-        self.LA_text_info.show()
-        self.T_text_info.show()
-        self.LA_text_common.show()
-        self.T_text_common.show()
+
 
 app = QApplication.instance()
 if not app:
     app = QApplication(sys.argv)
 
 Window = Windows()
+Window.resize(app.primaryScreen().size().width() - 50, app.primaryScreen().size().height() - 100)
 Window.show()
 
 app.exec_()
