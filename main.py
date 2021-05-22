@@ -16,10 +16,10 @@ from collections import Counter
 class Windows(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
-        self.setWindowTitle("Scraper")
+        self.setWindowTitle("Scraper Tool")
         self.statusBar().setStyleSheet("color : red")
         self.title = QLabel("Data mining")
-        self.title.setStyleSheet("text-decoration: underline")
+        self.title.setStyleSheet("text-decoration: underline; font-weight: bold")
         self.data_posts = None
         self.data_users = None
         self.data_analyse = None
@@ -55,7 +55,7 @@ class Windows(QMainWindow):
 
         # twitter checkbox
         self.CB_twitter = QCheckBox("Twitter")
-        self.CB_twitter.setStyleSheet("text-decoration: underline")
+        self.CB_twitter.setStyleSheet("text-decoration: underline; font-weight: bold")
         self.CB_twitter.stateChanged.connect(self.func_CB_twitter)
 
         # selection of paramters
@@ -293,12 +293,12 @@ class Windows(QMainWindow):
 
         # facebook checkbox
         self.CB_facebook = QCheckBox("Facebook")
-        self.CB_facebook.setStyleSheet("text-decoration: underline")
+        self.CB_facebook.setStyleSheet("text-decoration: underline; font-weight: bold")
         self.CB_facebook.stateChanged.connect(self.func_CB_facebook)
 
         # facebook page name
         self.LE_facebook_page_name = QLineEdit()
-        self.LE_facebook_page_name.setPlaceholderText("Enter Facebook Page (example : nintendo")
+        self.LE_facebook_page_name.setPlaceholderText("Enter Facebook Page (example : nintendo)")
         self.LE_facebook_page_name.hide()
 
         # facebook post parameters
@@ -592,34 +592,6 @@ class Windows(QMainWindow):
         self.widgets.setLayout(layout)
         self.setCentralWidget(self.widgets)
 
-        # pre checked boxes
-        self.CB_tweet_twitter_id.setChecked(True)
-        self.CB_tweet_twitter_date.setChecked(True)
-        self.CB_tweet_twitter_url.setChecked(True)
-        self.CB_tweet_twitter_user.setChecked(True)
-        self.CB_tweet_twitter_retweetedTweet.setChecked(True)
-        self.CB_tweet_twitter_replyCount.setChecked(True)
-        self.CB_tweet_twitter_quotedTweet.setChecked(True)
-        self.CB_tweet_twitter_likeCount.setChecked(True)
-        self.CB_tweet_twitter_content.setChecked(True)
-
-        self.CB_user_twitter_id.setChecked(True)
-        self.CB_user_twitter_username.setChecked(True)
-        self.CB_user_twitter_displayname.setChecked(True)
-        self.CB_user_twitter_description.setChecked(True)
-        self.CB_user_twitter_verified.setChecked(True)
-        self.CB_user_twitter_followersCount.setChecked(True)
-        self.CB_user_twitter_created.setChecked(True)
-
-        self.CB_post_facebook_post_id.setChecked(True)
-        self.CB_post_facebook_username.setChecked(True)
-        self.CB_post_facebook_user_url.setChecked(True)
-        self.CB_post_facebook_time.setChecked(True)
-        self.CB_post_facebook_text.setChecked(True)
-        self.CB_post_facebook_comments.setChecked(True)
-        self.CB_post_facebook_post_url.setChecked(True)
-        self.CB_post_facebook_reactors.setChecked(True)
-
     def parameters_twitter_user(self, check_box, list_parameters):
         # uncheck all user data if user is disable
         self.parameters_add_remove(check_box, list_parameters)
@@ -652,6 +624,7 @@ class Windows(QMainWindow):
             self.LA_user_twitter.hide()
             self.FR_user_twitter.hide()
         self.hideUselessWidgets()
+        self.unCheckCB()
 
     def func_CB_facebook(self):
         # show/hide widgets
@@ -667,6 +640,7 @@ class Windows(QMainWindow):
             self.FR_post_facebook_up.hide()
             self.FR_post_facebook_bottom.hide()
         self.hideUselessWidgets()
+        self.unCheckCB()
 
     def hideUselessWidgets(self):
         # hide widgets and clear data
@@ -731,7 +705,7 @@ class Windows(QMainWindow):
             self.statusBar().clearMessage()
             id_text = "Null"
             id_url = "Null"
-
+            print(self.list_param_posts)
             if self.CB_twitter.checkState():
                 # the scraped tweets, this is a generator
                 scraped_tweets = sntwitter.TwitterSearchScraper(
@@ -739,6 +713,7 @@ class Windows(QMainWindow):
                                                           self.LE_starting_date.text(),
                                                           self.LE_ending_date.text(),
                                                           self.CO_twitter_lang.currentText())).get_items()
+
                 # slicing the generator to keep only the numbers of tweets needed
                 sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_tweet_post_number.text()))
                 # convert to a DataFrame and keep only relevant columns
