@@ -27,7 +27,7 @@ class Windows(QMainWindow):
         self.list_param_posts = []
 
         # keyword
-        self.LE_keyWord = QLineEdit("macron")
+        self.LE_keyWord = QLineEdit()
         self.LE_keyWord.setPlaceholderText("Enter keyword")
 
         # lang (twitter only)
@@ -36,18 +36,18 @@ class Windows(QMainWindow):
         self.CO_twitter_lang.hide()
 
         # starting date
-        self.LE_starting_date = QLineEdit("2020-1-1")
+        self.LE_starting_date = QLineEdit()
         self.LE_starting_date.setPlaceholderText("Starting date : YYYY-MM-DD")
         onlyDate = QRegExpValidator(QRegExp("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"))
         self.LE_starting_date.setValidator(onlyDate)
 
         # ending date
-        self.LE_ending_date = QLineEdit("2021-1-1")
+        self.LE_ending_date = QLineEdit()
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
 
         # number of tweets/pages
-        self.LE_tweet_post_number = QLineEdit("15")
+        self.LE_tweet_post_number = QLineEdit()
         self.LE_tweet_post_number.setPlaceholderText("Number of tweets/posts")
         onlyInt = QIntValidator()
         onlyInt.setRange(1, 999)
@@ -60,7 +60,7 @@ class Windows(QMainWindow):
 
         # selection of paramters
         self.list_check_box = []
-        # twitter tweet
+        # twitter tweet parameters
         self.LA_tweet_twitter = QLabel("Parameters Tweet Info :")
         self.LA_tweet_twitter.hide()
         layout_CB_tweet_twitter = QHBoxLayout()
@@ -182,7 +182,7 @@ class Windows(QMainWindow):
         self.FR_tweet_twitter = QFrame()
         self.FR_tweet_twitter.setLayout(layout_CB_tweet_twitter)
         self.FR_tweet_twitter.hide()
-        # twitter user
+        # twitter user parameters
         self.LA_user_twitter = QLabel("Parameters Users Info (user needed) :")
         self.LA_user_twitter.hide()
         self.list_check_box_user_twitter = []
@@ -298,8 +298,215 @@ class Windows(QMainWindow):
 
         # facebook page name
         self.LE_facebook_page_name = QLineEdit()
-        self.LE_facebook_page_name.setPlaceholderText("Enter Facebook Page")
+        self.LE_facebook_page_name.setPlaceholderText("Enter Facebook Page (example : nintendo")
         self.LE_facebook_page_name.hide()
+
+        # facebook post parameters
+        self.LA_post_facebook = QLabel("Parameters Posts Info :")
+        self.LA_post_facebook.hide()
+        layout_CB_post_facebook_up = QHBoxLayout()
+        layout_CB_post_facebook_bottom = QHBoxLayout()
+        self.CB_post_facebook_available = QCheckBox("available")
+        self.list_check_box.append(self.CB_post_facebook_available)
+        self.CB_post_facebook_available.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_available, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_available)
+        self.CB_post_facebook_comments = QCheckBox("comments")
+        self.list_check_box.append(self.CB_post_facebook_comments)
+        self.CB_post_facebook_comments.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_comments, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_comments)
+        self.CB_post_facebook_comments_full = QCheckBox("comments_full")
+        self.list_check_box.append(self.CB_post_facebook_comments_full)
+        self.CB_post_facebook_comments_full.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_comments_full, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_comments_full)
+        self.CB_post_facebook_factcheck = QCheckBox("factcheck")
+        self.list_check_box.append(self.CB_post_facebook_factcheck)
+        self.CB_post_facebook_factcheck.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_factcheck, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_factcheck)
+        self.CB_post_facebook_image = QCheckBox("image")
+        self.list_check_box.append(self.CB_post_facebook_image)
+        self.CB_post_facebook_image.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_image, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_image)
+        self.CB_post_facebook_image_lowquality = QCheckBox("image_lowquality")
+        self.list_check_box.append(self.CB_post_facebook_image_lowquality)
+        self.CB_post_facebook_image_lowquality.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_image_lowquality, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_image_lowquality)
+        self.CB_post_facebook_images = QCheckBox("images")
+        self.list_check_box.append(self.CB_post_facebook_images)
+        self.CB_post_facebook_images.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_images, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_images)
+        self.CB_post_facebook_images_description = QCheckBox("images_description")
+        self.list_check_box.append(self.CB_post_facebook_images_description)
+        self.CB_post_facebook_images_description.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_images_description, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_images_description)
+        self.CB_post_facebook_images_lowquality = QCheckBox("images_lowquality")
+        self.list_check_box.append(self.CB_post_facebook_images_lowquality)
+        self.CB_post_facebook_images_lowquality.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_images_lowquality, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_images_lowquality)
+        self.CB_post_facebook_images_lowquality_description = QCheckBox("images_lowquality_description")
+        self.list_check_box.append(self.CB_post_facebook_images_lowquality_description)
+        self.CB_post_facebook_images_lowquality_description.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_images_lowquality_description, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_images_lowquality_description)
+        self.CB_post_facebook_is_live = QCheckBox("is_live")
+        self.list_check_box.append(self.CB_post_facebook_is_live)
+        self.CB_post_facebook_is_live.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_is_live, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_is_live)
+        self.CB_post_facebook_likes = QCheckBox("likes")
+        self.list_check_box.append(self.CB_post_facebook_likes)
+        self.CB_post_facebook_likes.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_likes, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_likes)
+        self.CB_post_facebook_link = QCheckBox("link")
+        self.list_check_box.append(self.CB_post_facebook_link)
+        self.CB_post_facebook_link.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_link, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_link)
+        self.CB_post_facebook_post_id = QCheckBox("post_id")
+        self.list_check_box.append(self.CB_post_facebook_post_id)
+        self.CB_post_facebook_post_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_post_id, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_post_id)
+        self.CB_post_facebook_post_text = QCheckBox("post_text")
+        self.list_check_box.append(self.CB_post_facebook_post_text)
+        self.CB_post_facebook_post_text.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_post_text, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_post_text)
+        self.CB_post_facebook_post_url = QCheckBox("post_url")
+        self.list_check_box.append(self.CB_post_facebook_post_url)
+        self.CB_post_facebook_post_url.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_post_url, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_post_url)
+        self.CB_post_facebook_reactors = QCheckBox("reactors")
+        self.list_check_box.append(self.CB_post_facebook_reactors)
+        self.CB_post_facebook_reactors.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_reactors, self.list_param_posts))
+        layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_reactors)
+        self.CB_post_facebook_shared_post_id = QCheckBox("shared_post_id")
+        self.list_check_box.append(self.CB_post_facebook_shared_post_id)
+        self.CB_post_facebook_shared_post_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_post_id, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_post_id)
+        self.CB_post_facebook_shared_post_url = QCheckBox("shared_post_url")
+        self.list_check_box.append(self.CB_post_facebook_shared_post_url)
+        self.CB_post_facebook_shared_post_url.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_post_url, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_post_url)
+        self.CB_post_facebook_shared_text = QCheckBox("shared_text")
+        self.list_check_box.append(self.CB_post_facebook_shared_text)
+        self.CB_post_facebook_shared_text.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_text, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_text)
+        self.CB_post_facebook_shared_time = QCheckBox("shared_time")
+        self.list_check_box.append(self.CB_post_facebook_shared_time)
+        self.CB_post_facebook_shared_time.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_time, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_time)
+        self.CB_post_facebook_shared_user_id = QCheckBox("shared_user_id")
+        self.list_check_box.append(self.CB_post_facebook_shared_user_id)
+        self.CB_post_facebook_shared_user_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_user_id, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_user_id)
+        self.CB_post_facebook_shared_username = QCheckBox("shared_username")
+        self.list_check_box.append(self.CB_post_facebook_shared_username)
+        self.CB_post_facebook_shared_username.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shared_username, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shared_username)
+        self.CB_post_facebook_shares = QCheckBox("shares")
+        self.list_check_box.append(self.CB_post_facebook_shares)
+        self.CB_post_facebook_shares.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_shares, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_shares)
+        self.CB_post_facebook_text = QCheckBox("text")
+        self.list_check_box.append(self.CB_post_facebook_text)
+        self.CB_post_facebook_text.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_text, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_text)
+        self.CB_post_facebook_time = QCheckBox("time")
+        self.list_check_box.append(self.CB_post_facebook_time)
+        self.CB_post_facebook_time.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_time, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_time)
+        self.CB_post_facebook_user_id = QCheckBox("user_id")
+        self.list_check_box.append(self.CB_post_facebook_user_id)
+        self.CB_post_facebook_user_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_user_id, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_user_id)
+        self.CB_post_facebook_user_url = QCheckBox("user_url")
+        self.list_check_box.append(self.CB_post_facebook_user_url)
+        self.CB_post_facebook_user_url.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_user_url, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_user_url)
+        self.CB_post_facebook_username = QCheckBox("username")
+        self.list_check_box.append(self.CB_post_facebook_username)
+        self.CB_post_facebook_username.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_username, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_username)
+        self.CB_post_facebook_video = QCheckBox("video")
+        self.list_check_box.append(self.CB_post_facebook_video)
+        self.CB_post_facebook_video.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video)
+        self.CB_post_facebook_video_id = QCheckBox("video_id")
+        self.list_check_box.append(self.CB_post_facebook_video_id)
+        self.CB_post_facebook_video_id.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_id, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_id)
+        self.CB_post_facebook_video_width = QCheckBox("video_width")
+        self.list_check_box.append(self.CB_post_facebook_video_width)
+        self.CB_post_facebook_video_width.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_width, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_width)
+        self.CB_post_facebook_video_duration_seconds = QCheckBox("video_duration_seconds")
+        self.list_check_box.append(self.CB_post_facebook_video_duration_seconds)
+        self.CB_post_facebook_video_duration_seconds.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_duration_seconds, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_duration_seconds)
+        self.CB_post_facebook_video_height = QCheckBox("video_height")
+        self.list_check_box.append(self.CB_post_facebook_video_height)
+        self.CB_post_facebook_video_height.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_height, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_height)
+        self.CB_post_facebook_video_quality = QCheckBox("video_quality")
+        self.list_check_box.append(self.CB_post_facebook_video_quality)
+        self.CB_post_facebook_video_quality.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_quality, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_quality)
+        self.CB_post_facebook_video_size_MB = QCheckBox("video_size_MB")
+        self.list_check_box.append(self.CB_post_facebook_video_size_MB)
+        self.CB_post_facebook_video_size_MB.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_size_MB, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_size_MB)
+        self.CB_post_facebook_video_watches = QCheckBox("video_watches")
+        self.list_check_box.append(self.CB_post_facebook_video_watches)
+        self.CB_post_facebook_video_watches.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_watches, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_watches)
+        self.CB_post_facebook_video_thumbnail = QCheckBox("video_thumbnail")
+        self.list_check_box.append(self.CB_post_facebook_video_thumbnail)
+        self.CB_post_facebook_video_thumbnail.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_video_thumbnail, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_video_thumbnail)
+        self.CB_post_facebook_w3_fb_url = QCheckBox("w3_fb_url")
+        self.list_check_box.append(self.CB_post_facebook_w3_fb_url)
+        self.CB_post_facebook_w3_fb_url.stateChanged.connect(
+            lambda: self.parameters_add_remove(self.CB_post_facebook_w3_fb_url, self.list_param_posts))
+        layout_CB_post_facebook_bottom.addWidget(self.CB_post_facebook_w3_fb_url)
+        self.FR_post_facebook_up = QFrame()
+        self.FR_post_facebook_up.setLayout(layout_CB_post_facebook_up)
+        self.FR_post_facebook_up.hide()
+        self.FR_post_facebook_bottom = QFrame()
+        self.FR_post_facebook_bottom.setLayout(layout_CB_post_facebook_bottom)
+        self.FR_post_facebook_bottom.hide()
 
         # table for showing tweets/posts
         self.LA_text_result = QLabel("Tweets/posts")
@@ -368,6 +575,9 @@ class Windows(QMainWindow):
         layout.addRow(self.FR_user_twitter)
         layout.addWidget(self.CB_facebook)
         layout.addWidget(self.LE_facebook_page_name)
+        layout.addWidget(self.LA_post_facebook)
+        layout.addWidget(self.FR_post_facebook_up)
+        layout.addWidget(self.FR_post_facebook_bottom)
         layout.addWidget(self.LA_text_result)
         layout.addWidget(self.T_text_result)
         layout.addWidget(self.LA_text_info)
@@ -381,6 +591,34 @@ class Windows(QMainWindow):
         layout.addWidget(self.BU_json)
         self.widgets.setLayout(layout)
         self.setCentralWidget(self.widgets)
+
+        # pre checked boxes
+        self.CB_tweet_twitter_id.setChecked(True)
+        self.CB_tweet_twitter_date.setChecked(True)
+        self.CB_tweet_twitter_url.setChecked(True)
+        self.CB_tweet_twitter_user.setChecked(True)
+        self.CB_tweet_twitter_retweetedTweet.setChecked(True)
+        self.CB_tweet_twitter_replyCount.setChecked(True)
+        self.CB_tweet_twitter_quotedTweet.setChecked(True)
+        self.CB_tweet_twitter_likeCount.setChecked(True)
+        self.CB_tweet_twitter_content.setChecked(True)
+
+        self.CB_user_twitter_id.setChecked(True)
+        self.CB_user_twitter_username.setChecked(True)
+        self.CB_user_twitter_displayname.setChecked(True)
+        self.CB_user_twitter_description.setChecked(True)
+        self.CB_user_twitter_verified.setChecked(True)
+        self.CB_user_twitter_followersCount.setChecked(True)
+        self.CB_user_twitter_created.setChecked(True)
+
+        self.CB_post_facebook_post_id.setChecked(True)
+        self.CB_post_facebook_username.setChecked(True)
+        self.CB_post_facebook_user_url.setChecked(True)
+        self.CB_post_facebook_time.setChecked(True)
+        self.CB_post_facebook_text.setChecked(True)
+        self.CB_post_facebook_comments.setChecked(True)
+        self.CB_post_facebook_post_url.setChecked(True)
+        self.CB_post_facebook_reactors.setChecked(True)
 
     def parameters_twitter_user(self, check_box, list_parameters):
         # uncheck all user data if user is disable
@@ -420,8 +658,14 @@ class Windows(QMainWindow):
         if self.CB_facebook.checkState():
             self.CB_twitter.setChecked(False)
             self.LE_facebook_page_name.show()
+            self.LA_post_facebook.show()
+            self.FR_post_facebook_up.show()
+            self.FR_post_facebook_bottom.show()
         else:
             self.LE_facebook_page_name.hide()
+            self.LA_post_facebook.hide()
+            self.FR_post_facebook_up.hide()
+            self.FR_post_facebook_bottom.hide()
         self.hideUselessWidgets()
 
     def hideUselessWidgets(self):
@@ -538,14 +782,15 @@ class Windows(QMainWindow):
                         break
                 # tranformation in dataframe with only the columns needed
                 self.data_posts = [None] * len(data_posts_old)
-                post_keys = ['post_id', 'time', 'comments', 'shares', 'likes', 'text', 'username', 'user_id',
-                             'post_url']
                 for i in range(len(data_posts_old)):
-                    self.data_posts[i] = {post_key: data_posts_old[i][post_key] for post_key in post_keys}
+                    self.data_posts[i] = {post_key: data_posts_old[i][post_key] for post_key in self.list_param_posts}
                 self.data_posts = pd.DataFrame(self.data_posts)
 
-                id_text = 'text'
-                id_url = 'post_url'
+                if 'text' in self.data_posts:
+                    id_text = 'text'
+                if 'post_url' in self.data_posts:
+                    id_url = 'post_url'
+
             if id_text in self.data_posts or id_url in self.data_posts:
                 # compute some info
                 horizontal_header = []
