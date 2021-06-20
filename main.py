@@ -548,10 +548,19 @@ class Windows(QMainWindow):
         self.BU_validate = QPushButton("Confirm")
         self.BU_validate.clicked.connect(self.func_BU_validate)
 
+        layout_BU_export = QHBoxLayout()
         # button for tables' exportation (all tweets/posts, all info and all users if it's twitter) on json format
-        self.BU_json = QPushButton("Export")
+        self.BU_json = QPushButton("Export to json")
         self.BU_json.clicked.connect(self.func_BU_json)
-        self.BU_json.hide()
+        layout_BU_export.addWidget(self.BU_json)
+
+        # button for tables' exportation (all tweets/posts, all info and all users if it's twitter) on csv format
+        self.BU_csv = QPushButton("Export to csv")
+        self.BU_csv.clicked.connect(self.func_BU_csv)
+        layout_BU_export.addWidget(self.BU_csv)
+        self.FR_export = QFrame()
+        self.FR_export.setLayout(layout_BU_export)
+        self.FR_export.hide()
 
         # line edit for the output file's name
         self.LE_json = QLineEdit()
@@ -589,7 +598,7 @@ class Windows(QMainWindow):
         layout.addWidget(self.T_user_result)
         layout.addWidget(self.BU_validate)
         layout.addWidget(self.LE_json)
-        layout.addWidget(self.BU_json)
+        layout.addWidget(self.FR_export)
         self.widgets.setLayout(layout)
         self.setCentralWidget(self.widgets)
 
@@ -653,7 +662,7 @@ class Windows(QMainWindow):
         self.LA_text_info.hide()
         self.T_text_info.hide()
         self.LE_json.hide()
-        self.BU_json.hide()
+        self.FR_export.hide()
         self.T_text_common.hide()
         self.LA_text_common.hide()
         self.LE_json.clear()
@@ -683,6 +692,21 @@ class Windows(QMainWindow):
 
             self.statusBar().showMessage("SUCCESS: Files saved")
 
+    def func_BU_csv(self):
+        # export the dataframes on json format
+        data_users_parsed = None
+        if self.data_posts.empty:
+            self.statusBar().showMessage("ERROR: Selection empty")
+        elif not self.LE_json.text():
+            self.statusBar().showMessage("ERROR: Please enter a file name")
+        else:
+            self.data_posts.to_csv(r'.\\export\\{}_posts.csv'.format(self.LE_json.text()), index=False, header=True)
+            if self.data_users is not None and not self.data_users.empty:
+                self.data_users.to_csv(r'.\\export\\{}_users.csv'.format(self.LE_json.text()), index=False, header=True)
+            if self.data_analyse is not None and not self.data_analyse.empty:
+                self.data_analyse.to_csv(r'.\\export\\{}_analyse.csv'.format(self.LE_json.text()), index=False, header=True)
+
+            self.statusBar().showMessage("SUCCESS: Files saved")
     def func_BU_validate(self):
         # recover data and put it in dataframe
         self.hideUselessWidgets()
@@ -788,7 +812,7 @@ class Windows(QMainWindow):
                 self.T_text_info.setHorizontalHeaderLabels(horizontal_header)
                 self.data_analyse = pd.DataFrame(self.data_analyse)
             self.show_data_sample(id_text)
-            self.BU_json.show()
+            self.FR_export.show()
             self.LE_json.show()
 
     def unCheckCB(self):
