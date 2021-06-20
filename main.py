@@ -31,7 +31,7 @@ class Windows(QMainWindow):
         self.list_common_words = []
 
         # keyword
-        self.LE_keyWord = QLineEdit("covid")
+        self.LE_keyWord = QLineEdit()
         self.LE_keyWord.setPlaceholderText("Enter keyword")
 
         # lang (twitter only)
@@ -40,18 +40,18 @@ class Windows(QMainWindow):
         self.CO_twitter_lang.hide()
 
         # starting date
-        self.LE_starting_date = QLineEdit("2020-1-1")
+        self.LE_starting_date = QLineEdit()
         self.LE_starting_date.setPlaceholderText("Starting date : YYYY-MM-DD")
         onlyDate = QRegExpValidator(QRegExp("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"))
         self.LE_starting_date.setValidator(onlyDate)
 
         # ending date
-        self.LE_ending_date = QLineEdit("2021-1-1")
+        self.LE_ending_date = QLineEdit()
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
 
         # number of tweets/pages
-        self.LE_tweet_post_number = QLineEdit("5")
+        self.LE_tweet_post_number = QLineEdit()
         self.LE_tweet_post_number.setPlaceholderText("Number of tweets/posts")
         onlyInt = QIntValidator()
         onlyInt.setRange(1, 999)
@@ -889,11 +889,8 @@ class Windows(QMainWindow):
 
         # Show most common words
         if id_text in self.data_posts:
-            print("yo2")
             list_text = [word for word in " ".join(self.data_posts[id_text]).lower().split() if not word in stopwords.words('english')]
-            print(list_text)
             list_common_words = Counter(list_text).most_common(5)
-            print("yo4")
             self.data_words = pd.DataFrame(list_common_words, columns=['word', 'word count'])
 
             i = 0
