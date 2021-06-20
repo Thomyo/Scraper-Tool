@@ -12,6 +12,7 @@ from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp
 from collections import Counter
 import fasttext
+from nltk.corpus import stopwords
 
 
 class Windows(QMainWindow):
@@ -861,6 +862,7 @@ class Windows(QMainWindow):
         self.list_param_posts = []
 
         # show posts/tweets
+        list_sentiments = []
         for i in range(len(self.data_posts)):
             h = 0
             for j in range(len(self.data_posts.columns)):
@@ -872,6 +874,10 @@ class Windows(QMainWindow):
                 post = self.data_posts[id_text][i].replace("\n", " ")
                 sentiment = model.predict(post)[0][0][9:]
                 self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(sentiment)))
+                list_sentiments.append(sentiment)
+        if id_text in self.data_posts:
+            self.data_posts['sentiment'] = list_sentiments
+
 
         # show info about those tweets/posts
         if self.data_analyse is not None:
@@ -883,7 +889,11 @@ class Windows(QMainWindow):
 
         # Show most common words
         if id_text in self.data_posts:
-            list_common_words = Counter(" ".join(self.data_posts[id_text]).split()).most_common(5)
+            print("yo2")
+            list_text = [word for word in " ".join(self.data_posts[id_text]).lower().split() if not word in stopwords.words('english')]
+            print(list_text)
+            list_common_words = Counter(list_text).most_common(5)
+            print("yo4")
             self.data_words = pd.DataFrame(list_common_words, columns=['word', 'word count'])
 
             i = 0
