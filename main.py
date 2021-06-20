@@ -24,8 +24,10 @@ class Windows(QMainWindow):
         self.data_posts = None
         self.data_users = None
         self.data_analyse = None
+        self.data_words = None
         self.list_param_users = []
         self.list_param_posts = []
+        self.list_common_words = []
 
         # keyword
         self.LE_keyWord = QLineEdit("covid")
@@ -669,6 +671,7 @@ class Windows(QMainWindow):
         self.data_posts = None
         self.data_users = None
         self.data_analyse = None
+        self.data_words = None
 
     def func_BU_json(self):
         # export the dataframes on json format
@@ -681,6 +684,10 @@ class Windows(QMainWindow):
             data_posts_parsed = json.loads(self.data_posts.to_json(orient="split"))
             with open(".\\export\\{}_posts.json".format(self.LE_json.text()), 'w') as outfile:
                 json.dump(data_posts_parsed, outfile)
+            if self.data_words is not None and not self.data_words.empty:
+                data_words_parsed = json.loads(self.data_words.to_json(orient="split"))
+                with open(".\\export\\{}_words.json".format(self.LE_json.text()), 'w') as outfile:
+                    json.dump(data_words_parsed, outfile)
             if self.data_users is not None and not self.data_users.empty:
                 data_users_parsed = json.loads(self.data_users.to_json(orient="split"))
                 with open(".\\export\\{}_users.json".format(self.LE_json.text()), 'w') as outfile:
@@ -701,6 +708,8 @@ class Windows(QMainWindow):
             self.statusBar().showMessage("ERROR: Please enter a file name")
         else:
             self.data_posts.to_csv(r'.\\export\\{}_posts.csv'.format(self.LE_json.text()), index=False, header=True)
+            if self.data_words is not None and not self.data_words.empty:
+                self.data_words.to_csv(r'.\\export\\{}_words.csv'.format(self.LE_json.text()), index=False, header=True)
             if self.data_users is not None and not self.data_users.empty:
                 self.data_users.to_csv(r'.\\export\\{}_users.csv'.format(self.LE_json.text()), index=False, header=True)
             if self.data_analyse is not None and not self.data_analyse.empty:
@@ -874,10 +883,11 @@ class Windows(QMainWindow):
 
         # Show most common words
         if id_text in self.data_posts:
-            common_words = Counter(" ".join(self.data_posts[id_text]).split()).most_common(5)
+            list_common_words = Counter(" ".join(self.data_posts[id_text]).split()).most_common(5)
+            self.data_words = pd.DataFrame(list_common_words, columns=['word', 'word count'])
 
             i = 0
-            for x, y in common_words:
+            for x, y in list_common_words:
                 self.T_text_common.setItem(0, i, QTableWidgetItem("{}".format(x)))
                 self.T_text_common.setItem(1, i, QTableWidgetItem("{}".format(y)))
                 i += 1
