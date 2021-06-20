@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, \
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp
 from collections import Counter
+import fasttext
 
 
 class Windows(QMainWindow):
@@ -27,27 +28,27 @@ class Windows(QMainWindow):
         self.list_param_posts = []
 
         # keyword
-        self.LE_keyWord = QLineEdit()
+        self.LE_keyWord = QLineEdit("covid")
         self.LE_keyWord.setPlaceholderText("Enter keyword")
 
         # lang (twitter only)
         self.CO_twitter_lang = QComboBox(self)
-        self.CO_twitter_lang.addItems(["en", "fr"])
+        self.CO_twitter_lang.addItems(["en"])
         self.CO_twitter_lang.hide()
 
         # starting date
-        self.LE_starting_date = QLineEdit()
+        self.LE_starting_date = QLineEdit("2020-1-1")
         self.LE_starting_date.setPlaceholderText("Starting date : YYYY-MM-DD")
         onlyDate = QRegExpValidator(QRegExp("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"))
         self.LE_starting_date.setValidator(onlyDate)
 
         # ending date
-        self.LE_ending_date = QLineEdit()
+        self.LE_ending_date = QLineEdit("2021-1-1")
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
 
         # number of tweets/pages
-        self.LE_tweet_post_number = QLineEdit()
+        self.LE_tweet_post_number = QLineEdit("5")
         self.LE_tweet_post_number.setPlaceholderText("Number of tweets/posts")
         onlyInt = QIntValidator()
         onlyInt.setRange(1, 999)
@@ -811,6 +812,9 @@ class Windows(QMainWindow):
     def show_data_sample(self, id_text):
         # fill in the tables
         self.removeNotShowable(self.list_param_posts, self.data_posts)
+        if id_text in self.data_posts:
+            model = fasttext.load_model("model_test.bin")
+            self.list_param_posts.append("sentiment")
         self.T_text_result.setColumnCount(len(self.list_param_posts))
         self.T_text_result.setRowCount(len(self.data_posts))
         self.T_text_result.setHorizontalHeaderLabels(self.list_param_posts)
@@ -830,6 +834,10 @@ class Windows(QMainWindow):
                               (str, np.int64, pd._libs.tslibs.timestamps.Timestamp, np.bool_)):
                     self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
                     h += 1
+            if id_text in self.data_posts:
+                post = self.data_posts[id_text][i].replace("\n", " ")
+                sentiment = model.predict(post)[0][0][9:]
+                self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(sentiment)))
 
         # show info about those tweets/posts
         if self.data_analyse is not None:
