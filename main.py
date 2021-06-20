@@ -849,6 +849,7 @@ class Windows(QMainWindow):
             self.T_user_result.setHorizontalHeaderLabels(self.list_param_users)
         self.T_text_info.setRowCount(len(self.data_posts))
         self.unCheckCB()
+        self.list_param_posts = []
 
         # show posts/tweets
         for i in range(len(self.data_posts)):
