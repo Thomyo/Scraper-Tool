@@ -871,7 +871,7 @@ class Windows(QMainWindow):
                     self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
                     h += 1
             if id_text in self.data_posts:
-                post = self.data_posts[id_text][i].replace("\n", " ")
+                post = self.data_posts[id_text][i].lower().replace("\n", " ")
                 sentiment = model.predict(post)[0][0][9:]
                 self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(sentiment)))
                 list_sentiments.append(sentiment)
