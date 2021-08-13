@@ -15,6 +15,7 @@ import fasttext
 from nltk.corpus import stopwords
 import re
 RGX_URL = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
+RGX_CIT = "(\s|^)@\w+"
 
 class Windows(QMainWindow):
     def __init__(self):
@@ -848,8 +849,10 @@ class Windows(QMainWindow):
         # fill in the tables
         self.removeNotShowable(self.list_param_posts, self.data_posts)
         if id_text in self.data_posts:
-            model = fasttext.load_model("model_test.bin")
+            model_emotion = fasttext.load_model("model_emotion.bin")
+            model_fake = fasttext.load_model("model_fakeD.bin")
             self.list_param_posts.append("sentiment")
+            self.list_param_posts.append("fakeness")
         self.T_text_result.setColumnCount(len(self.list_param_posts))
         self.T_text_result.setRowCount(len(self.data_posts))
         self.T_text_result.setHorizontalHeaderLabels(self.list_param_posts)
@@ -864,6 +867,7 @@ class Windows(QMainWindow):
 
         # show posts/tweets
         list_sentiments = []
+        list_fakeness = []
         for i in range(len(self.data_posts)):
             h = 0
             for j in range(len(self.data_posts.columns)):
@@ -872,14 +876,21 @@ class Windows(QMainWindow):
                     self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
                     h += 1
             if id_text in self.data_posts:
-                post_with_URL = self.data_posts[id_text][i].lower().replace("\n", " ")
-                post = re.sub(RGX_URL, '', post_with_URL)
-                sentiment = model.predict(post)[0][0][9:]
+                post_with_URL_and_user_citation = self.data_posts[id_text][i].lower().replace("\n", " ")
+                post_with_user_citation = re.sub(RGX_URL, '', post_with_URL_and_user_citation)
+                post = re.sub(RGX_CIT, '', post_with_user_citation)
+
+                sentiment = model_emotion.predict(post)[0][0][9:]
                 self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(sentiment)))
                 list_sentiments.append(sentiment)
+
+                fakeness = model_fake.predict(post)[0][0][9:]
+                self.T_text_result.setItem(i, h+1, QTableWidgetItem("{}".format(fakeness)))
+                list_fakeness.append(fakeness)
+
         if id_text in self.data_posts:
             self.data_posts['sentiment'] = list_sentiments
-
+            self.data_posts['fakeness'] = list_fakeness
 
         # show info about those tweets/posts
         if self.data_analyse is not None:
