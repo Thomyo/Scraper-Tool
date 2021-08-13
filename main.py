@@ -13,7 +13,8 @@ from PyQt5.QtCore import QRegExp
 from collections import Counter
 import fasttext
 from nltk.corpus import stopwords
-
+import re
+RGX_URL = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
 
 class Windows(QMainWindow):
     def __init__(self):
@@ -871,7 +872,8 @@ class Windows(QMainWindow):
                     self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(self.data_posts.iloc[i, j])))
                     h += 1
             if id_text in self.data_posts:
-                post = self.data_posts[id_text][i].lower().replace("\n", " ")
+                post_with_URL = self.data_posts[id_text][i].lower().replace("\n", " ")
+                post = re.sub(RGX_URL, '', post_with_URL)
                 sentiment = model.predict(post)[0][0][9:]
                 self.T_text_result.setItem(i, h, QTableWidgetItem("{}".format(sentiment)))
                 list_sentiments.append(sentiment)
