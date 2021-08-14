@@ -14,8 +14,10 @@ from collections import Counter
 import fasttext
 from nltk.corpus import stopwords
 import re
+
 RGX_URL = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
 RGX_CIT = "(\s|^)@\w+"
+
 
 class Windows(QMainWindow):
     def __init__(self):
@@ -32,9 +34,27 @@ class Windows(QMainWindow):
         self.list_param_posts = []
         self.list_common_words = []
 
+        # twitter link ID checkbox
+        self.CB_twitter_link_id = QCheckBox("Twitter Link")
+        self.CB_twitter_link_id.setStyleSheet("text-decoration: underline; font-weight: bold; color:blue")
+        self.CB_twitter_link_id.stateChanged.connect(self.func_CB_twitter_link_id)
+
+        # id of the tweet
+        self.LE_twitter_link_id = QLineEdit()
+        self.LE_twitter_link_id.setPlaceholderText("ID of the tweet")
+        onlyNumber = QRegExpValidator(QRegExp("[0-9]*"))
+        self.LE_twitter_link_id.setValidator(onlyNumber)
+        self.LE_twitter_link_id.hide()
+
+        # bulk search checkbox
+        self.CB_bulk_search = QCheckBox("Twitter or Facebook bulk search")
+        self.CB_bulk_search.setStyleSheet("text-decoration: underline; font-weight: bold; color:blue")
+        self.CB_bulk_search.stateChanged.connect(self.func_CB_bulk_search)
+
         # keyword
         self.LE_keyWord = QLineEdit()
         self.LE_keyWord.setPlaceholderText("Enter keyword")
+        self.LE_keyWord.hide()
 
         # lang (twitter only)
         self.CO_twitter_lang = QComboBox(self)
@@ -46,11 +66,13 @@ class Windows(QMainWindow):
         self.LE_starting_date.setPlaceholderText("Starting date : YYYY-MM-DD")
         onlyDate = QRegExpValidator(QRegExp("[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}"))
         self.LE_starting_date.setValidator(onlyDate)
+        self.LE_starting_date.hide()
 
         # ending date
         self.LE_ending_date = QLineEdit()
         self.LE_ending_date.setPlaceholderText("Ending date : YYYY-MM-DD")
         self.LE_ending_date.setValidator(onlyDate)
+        self.LE_ending_date.hide()
 
         # number of tweets/pages
         self.LE_tweet_post_number = QLineEdit()
@@ -58,10 +80,11 @@ class Windows(QMainWindow):
         onlyInt = QIntValidator()
         onlyInt.setRange(1, 999)
         self.LE_tweet_post_number.setValidator(onlyInt)
+        self.LE_tweet_post_number.hide()
 
         # twitter checkbox
         self.CB_twitter = QCheckBox("Twitter")
-        self.CB_twitter.setStyleSheet("text-decoration: underline; font-weight: bold")
+        self.CB_twitter.setStyleSheet("text-decoration: underline; font-weight: bold; color: red")
         self.CB_twitter.stateChanged.connect(self.func_CB_twitter)
 
         # selection of paramters
@@ -299,7 +322,7 @@ class Windows(QMainWindow):
 
         # facebook checkbox
         self.CB_facebook = QCheckBox("Facebook")
-        self.CB_facebook.setStyleSheet("text-decoration: underline; font-weight: bold")
+        self.CB_facebook.setStyleSheet("text-decoration: underline; font-weight: bold; color: red")
         self.CB_facebook.stateChanged.connect(self.func_CB_facebook)
 
         # facebook page name
@@ -360,7 +383,8 @@ class Windows(QMainWindow):
         self.CB_post_facebook_images_lowquality_description = QCheckBox("images_lowquality_description")
         self.list_check_box.append(self.CB_post_facebook_images_lowquality_description)
         self.CB_post_facebook_images_lowquality_description.stateChanged.connect(
-            lambda: self.parameters_add_remove(self.CB_post_facebook_images_lowquality_description, self.list_param_posts))
+            lambda: self.parameters_add_remove(self.CB_post_facebook_images_lowquality_description,
+                                               self.list_param_posts))
         layout_CB_post_facebook_up.addWidget(self.CB_post_facebook_images_lowquality_description)
         self.CB_post_facebook_is_live = QCheckBox("is_live")
         self.list_check_box.append(self.CB_post_facebook_is_live)
@@ -578,6 +602,9 @@ class Windows(QMainWindow):
         self.widgets = QWidget()
         layout = QFormLayout()
         layout.addWidget(self.title)
+        layout.addWidget(self.CB_twitter_link_id)
+        layout.addWidget(self.LE_twitter_link_id)
+        layout.addWidget(self.CB_bulk_search)
         layout.addWidget(self.LE_keyWord)
         layout.addWidget(self.LE_starting_date)
         layout.addWidget(self.LE_ending_date)
@@ -606,6 +633,28 @@ class Windows(QMainWindow):
         layout.addWidget(self.FR_export)
         self.widgets.setLayout(layout)
         self.setCentralWidget(self.widgets)
+
+    def func_CB_twitter_link_id(self):
+        if self.CB_twitter_link_id.checkState():
+            self.CB_bulk_search.setChecked(False)
+            self.CB_facebook.setChecked(False)
+            self.CB_twitter.setChecked(True)
+            self.LE_twitter_link_id.show()
+        else:
+            self.LE_twitter_link_id.hide()
+
+    def func_CB_bulk_search(self):
+        if self.CB_bulk_search.checkState():
+            self.CB_twitter_link_id.setChecked(False)
+            self.LE_keyWord.show()
+            self.LE_starting_date.show()
+            self.LE_ending_date.show()
+            self.LE_tweet_post_number.show()
+        else:
+            self.LE_keyWord.hide()
+            self.LE_starting_date.hide()
+            self.LE_ending_date.hide()
+            self.LE_tweet_post_number.hide()
 
     def parameters_twitter_user(self, check_box, list_parameters):
         # uncheck all user data if user is disable
@@ -645,6 +694,8 @@ class Windows(QMainWindow):
         # show/hide widgets
         if self.CB_facebook.checkState():
             self.CB_twitter.setChecked(False)
+            self.CB_twitter_link_id.setChecked(False)
+            self.CB_bulk_search.setChecked(True)
             self.LE_facebook_page_name.show()
             self.LA_post_facebook.show()
             self.FR_post_facebook_up.show()
@@ -716,9 +767,11 @@ class Windows(QMainWindow):
             if self.data_users is not None and not self.data_users.empty:
                 self.data_users.to_csv(r'.\\export\\{}_users.csv'.format(self.LE_json.text()), index=False, header=True)
             if self.data_analyse is not None and not self.data_analyse.empty:
-                self.data_analyse.to_csv(r'.\\export\\{}_analyse.csv'.format(self.LE_json.text()), index=False, header=True)
+                self.data_analyse.to_csv(r'.\\export\\{}_analyse.csv'.format(self.LE_json.text()), index=False,
+                                         header=True)
 
             self.statusBar().showMessage("SUCCESS: Files saved")
+
     def func_BU_validate(self):
         # recover data and put it in dataframe
         self.hideUselessWidgets()
@@ -728,13 +781,17 @@ class Windows(QMainWindow):
         self.T_text_result.clearContents()
         self.T_text_common.clearContents()
 
-        if not self.LE_keyWord.text():
+        if not self.CB_twitter_link_id.checkState() and not self.CB_bulk_search.checkState():
+            self.statusBar().showMessage("ERROR: Please specify : LINK or BULK")
+        elif self.CB_twitter_link_id.checkState() and not self.LE_twitter_link_id.text():
+            self.statusBar().showMessage("ERROR: Please enter a tweet ID")
+        elif self.CB_bulk_search.checkState() and not self.LE_keyWord.text():
             self.statusBar().showMessage("ERROR: Please enter a keyword")
         elif self.CB_facebook.checkState() and not self.LE_facebook_page_name.text():
             self.statusBar().showMessage("ERROR: Please specify a page name")
-        elif not self.LE_tweet_post_number.text():
+        elif self.CB_bulk_search.checkState() and not self.LE_tweet_post_number.text():
             self.statusBar().showMessage("ERROR: Please specify a number of tweets")
-        elif not self.LE_starting_date.text() or not self.LE_ending_date.text():
+        elif self.CB_bulk_search.checkState() and (not self.LE_starting_date.text() or not self.LE_ending_date.text()):
             self.statusBar().showMessage("ERROR: Please specify dates")
         elif not self.CB_facebook.checkState() and not self.CB_twitter.checkState():
             self.statusBar().showMessage("ERROR: Please select one social network")
@@ -744,17 +801,21 @@ class Windows(QMainWindow):
             id_url = "Null"
 
             if self.CB_twitter.checkState():
-                # the scraped tweets, this is a generator
-                scraped_tweets = sntwitter.TwitterSearchScraper(
-                    '{} since:{} until:{} lang:{}'.format(self.LE_keyWord.text(),
-                                                          self.LE_starting_date.text(),
-                                                          self.LE_ending_date.text(),
-                                                          self.CO_twitter_lang.currentText())).get_items()
+                if self.CB_bulk_search.checkState():
+                    # the scraped tweets, this is a generator
+                    scraped_tweets = sntwitter.TwitterSearchScraper(
+                        '{} since:{} until:{} lang:{}'.format(self.LE_keyWord.text(),
+                                                              self.LE_starting_date.text(),
+                                                              self.LE_ending_date.text(),
+                                                              self.CO_twitter_lang.currentText())).get_items()
 
-                # slicing the generator to keep only the numbers of tweets needed
-                sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_tweet_post_number.text()))
-                # convert to a DataFrame and keep only relevant columns
-                self.data_posts = pd.DataFrame(sliced_scraped_tweets)[self.list_param_posts]
+                    # slicing the generator to keep only the numbers of tweets needed
+                    sliced_scraped_tweets = itertools.islice(scraped_tweets, int(self.LE_tweet_post_number.text()))
+                    # convert to a DataFrame and keep only relevant columns
+                    self.data_posts = pd.DataFrame(sliced_scraped_tweets)[self.list_param_posts]
+                elif self.CB_twitter_link_id.checkState():
+                    scraped_tweet = sntwitter.TwitterSearchScraper('since_id:{} max_id:{} filter:safe'.format(int(self.LE_twitter_link_id.text())-1, self.LE_twitter_link_id.text())).get_items()
+                    self.data_posts = pd.DataFrame(scraped_tweet)[self.list_param_posts]
 
                 # recover data from users
                 data_users_old = []
@@ -885,7 +946,7 @@ class Windows(QMainWindow):
                 list_sentiments.append(sentiment)
 
                 fakeness = model_fake.predict(post)[0][0][9:]
-                self.T_text_result.setItem(i, h+1, QTableWidgetItem("{}".format(fakeness)))
+                self.T_text_result.setItem(i, h + 1, QTableWidgetItem("{}".format(fakeness)))
                 list_fakeness.append(fakeness)
 
         if id_text in self.data_posts:
@@ -902,7 +963,8 @@ class Windows(QMainWindow):
 
         # Show most common words
         if id_text in self.data_posts:
-            list_text = [word for word in " ".join(self.data_posts[id_text]).lower().split() if not word in stopwords.words('english')]
+            list_text = [word for word in " ".join(self.data_posts[id_text]).lower().split() if
+                         not word in stopwords.words('english')]
             list_common_words = Counter(list_text).most_common(5)
             self.data_words = pd.DataFrame(list_common_words, columns=['word', 'word count'])
 
